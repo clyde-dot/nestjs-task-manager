@@ -5,7 +5,6 @@ import { PassportStrategy } from '@nestjs/passport'
 
 import { AuthService } from '../auth.service'
 import type { User } from '@prisma/client'
-import { LoginDto } from '../dto/login.dto'
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, 'local') {

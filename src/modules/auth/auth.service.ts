@@ -2,9 +2,10 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common'
 import { RegistrationDto } from './dto/registration.dto'
-import { UserService } from 'src/user/user.service'
+import { UserService } from 'src/modules/user/user.service'
 import { compareSync, hashSync } from 'bcrypt'
 import { LoginDto } from './dto/login.dto'
 import { JwtService } from '@nestjs/jwt'
@@ -29,27 +30,49 @@ export class AuthService {
     if (!isPasswordCorrect) {
       throw new BadRequestException('Неверный пароль')
     }
-    /*if(!user.isVerified){
-      throw new BadRequestException('Почта не подтверждена. Подтвердите почту для авторизации')
-    }*/
+
     return user
   }
 
-  async registration(dto: RegistrationDto): Promise<string> {
+  async registration(dto: RegistrationDto): Promise<User> {
     const candidate = await this.userService.findByEmail(dto.email)
     if (candidate) {
       throw new ConflictException('Пользователь с таким email уже существует')
     }
     const hashedPassword = this.hashData(dto.password)
-    await this.userService.create({
-      email: dto.email,
+    const user = await this.userService.create({
+      ...dto,
       password: hashedPassword,
     })
-    return 'Вы успешно зарегистрировались'
+    return user
   }
 
   async logout(id: string): Promise<void> {
     await this.userService.updateToken(id, null)
+  }
+
+  async verifyEmail(token: string): Promise<Boolean> {
+    try {
+      const decodedToken = this.jwtService.verify<{
+        email: string
+        exp: number
+        iat: number
+      }>(token, {
+        secret: this.configService.getOrThrow('EMAIL_VERIFY_SECRET'),
+      })
+      const user = await this.userService.findByEmail(decodedToken.email)
+      if (!user) {
+        throw new BadRequestException('Пользователь не найден')
+      }
+      await this.userService.update(user.id, { isVerified: true })
+      return true
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Срок действия токена истек')
+      }
+      console.log(error)
+      throw new InternalServerErrorException('Ошибка при проверке токена')
+    }
   }
 
   compareData(data: string, hashedData: string): boolean {
@@ -73,5 +96,16 @@ export class AuthService {
     const hashedToken = this.hashData(refreshToken)
     await this.userService.updateToken(user.id, hashedToken)
     return { accessToken, refreshToken }
+  }
+
+  generateVerifyToken(email: string): string {
+    const token = this.jwtService.sign(
+      { email },
+      {
+        secret: this.configService.getOrThrow('EMAIL_VERIFY_SECRET'),
+        expiresIn: this.configService.getOrThrow('EMAIL_VERIFY_EXPIRE'),
+      },
+    )
+    return token
   }
 }

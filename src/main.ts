@@ -12,7 +12,6 @@ async function start() {
   app.setGlobalPrefix('api')
   app.enableCors({
     withCredentials: true,
-    origin: configService.getOrThrow('CLIENT_URL'),
   })
   app.useGlobalPipes(new ValidationPipe())
   app.use(cookieParser())

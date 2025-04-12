@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Req,
   Res,
@@ -20,25 +21,28 @@ import { UserDecorator } from './decorators/user.decorator'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 import { EmailVerifiedGuard } from './guards/email-verified.guard'
 import { AccountVerified } from './decorators/account-verified.decorator'
+import { SmtpService } from 'src/core/smtp/smtp.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly smtpService: SmtpService,
+  ) {}
 
   @Public()
   @Post('registration')
   async registration(@Body() dto: RegistrationDto) {
-    return await this.authService.registration(dto)
+    const user = await this.authService.registration(dto)
+    const verifyToken = this.authService.generateVerifyToken(user.email)
+    await this.smtpService.sendVerificationEmail(user.email, verifyToken)
+    return 'Вы успешно зарегистрировались! На вашу почту было отправлено письмо для подтверждения почты'
   }
 
   @Public()
   @AccountVerified('local')
   @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-    @UserDecorator() user: User,
-    @Res() res: Response,
-  ) {
+  async login(@UserDecorator() user: User, @Res() res: Response) {
     const tokens = await this.authService.generateToken(user)
     res.cookie('refreshToken', tokens.refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -47,9 +51,10 @@ export class AuthController {
       sameSite: 'strict',
       domain: 'localhost',
     })
+
     return res.json({
       accessToken: tokens.accessToken,
-      message: 'Вы успешно авторизовались',
+      message: 'Вы успешно авторизовались !',
     })
   }
 
@@ -78,5 +83,12 @@ export class AuthController {
   @Get('profile')
   async getProfile(@Req() req: RequestWithUser) {
     return req.user
+  }
+
+  @Public()
+  @Get('verify/:token')
+  async verify(@Param('token') token: string, @Res() res: Response) {
+    await this.authService.verifyEmail(token)
+    return res.json({ message: 'Вы успешно подтвердили почту' })
   }
 }

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { Request } from 'express'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import { UserService } from 'src/user/user.service'
+import { UserService } from 'src/modules/user/user.service'
 import { AuthService } from '../auth.service'
 import { JwtService } from '@nestjs/jwt'
 
@@ -40,7 +40,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     const refreshToken = req.cookies?.refreshToken
 
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not provided')
+      throw new UnauthorizedException('Не валидный токен обновления')
     }
     const payload = this.jwtService.verify(refreshToken, {
       secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
@@ -48,13 +48,15 @@ export class JwtRefreshStrategy extends PassportStrategy(
 
     const user = await this.userService.findById(payload.id)
     if (!user || !user.token) {
-      throw new UnauthorizedException('User not found or no token stored')
+      throw new UnauthorizedException(
+        'Пользователь пытается обойти защиту без авторизаций ',
+      )
     }
 
     const isValid = this.authService.compareData(refreshToken, user.token)
     if (!isValid) {
       throw new UnauthorizedException(
-        'Refresh token does not match stored hash',
+        'Вы пытаетесь обойти защиту с невалидным токеном обновления',
       )
     }
 

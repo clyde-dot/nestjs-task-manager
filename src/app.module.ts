@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
-import { PrismaModule } from './prisma/prisma.module'
-import { AuthModule } from './auth/auth.module'
-import { UserModule } from './user/user.module'
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard'
+import { PrismaModule } from './core/prisma/prisma.module'
+import { AuthModule } from './modules/auth/auth.module'
+import { UserModule } from './modules/user/user.module'
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
+import { SmtpModule } from './core/smtp/smtp.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard'
     PrismaModule,
     AuthModule,
     UserModule,
+    SmtpModule,
   ],
   controllers: [],
   providers: [
