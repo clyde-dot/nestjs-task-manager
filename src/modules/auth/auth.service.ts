@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt'
 import { User } from '@prisma/client'
 import { ConfigService } from '@nestjs/config'
 import { ITokens } from './auth.interface'
+import { SmtpService } from 'src/core/smtp/smtp.service'
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly smtpService: SmtpService,
   ) {}
 
   async validate(email: string, password: string): Promise<User> {
@@ -40,10 +42,11 @@ export class AuthService {
       throw new ConflictException('Пользователь с таким email уже существует')
     }
     const hashedPassword = this.hashData(dto.password)
-    const user = await this.userService.create({
+    const user = await this.userService.create({ 
       ...dto,
       password: hashedPassword,
     })
+    await this.sendVerifyEmail({ id: user.id, email: user.email })
     return user
   }
 
@@ -51,16 +54,27 @@ export class AuthService {
     await this.userService.updateToken(id, null)
   }
 
+  async sendVerifyEmail({ id, email }: { id: string; email: string }) {
+    const verifyToken = this.generateVerifyToken(id)
+    const sendedMessage = await this.smtpService.sendVerificationEmail(
+      email,
+      verifyToken,
+    )
+    if (!sendedMessage) {
+      throw new InternalServerErrorException('Ошибка при отправке письма')
+    }
+  }
+
   async verifyEmail(token: string): Promise<Boolean> {
     try {
       const decodedToken = this.jwtService.verify<{
-        email: string
+        id: string
         exp: number
         iat: number
       }>(token, {
         secret: this.configService.getOrThrow('EMAIL_VERIFY_SECRET'),
       })
-      const user = await this.userService.findByEmail(decodedToken.email)
+      const user = await this.userService.findById(decodedToken.id)
       if (!user) {
         throw new BadRequestException('Пользователь не найден')
       }
@@ -70,7 +84,6 @@ export class AuthService {
       if (error.name === 'TokenExpiredError') {
         throw new BadRequestException('Срок действия токена истек')
       }
-      console.log(error)
       throw new InternalServerErrorException('Ошибка при проверке токена')
     }
   }
@@ -98,9 +111,9 @@ export class AuthService {
     return { accessToken, refreshToken }
   }
 
-  generateVerifyToken(email: string): string {
+  generateVerifyToken(id: string): string {
     const token = this.jwtService.sign(
-      { email },
+      { id },
       {
         secret: this.configService.getOrThrow('EMAIL_VERIFY_SECRET'),
         expiresIn: this.configService.getOrThrow('EMAIL_VERIFY_EXPIRE'),

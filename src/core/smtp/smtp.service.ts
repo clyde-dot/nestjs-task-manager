@@ -28,7 +28,6 @@ export class SmtpService {
         },
       })
 
-      console.log('Verified email sent to:', to)
       return sendedMessage
     } catch (err) {
       console.error('Email sending error:', err.message)

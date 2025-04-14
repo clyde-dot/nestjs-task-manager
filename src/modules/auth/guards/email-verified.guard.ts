@@ -12,14 +12,13 @@ import { AuthService } from '../auth.service'
 export class EmailVerifiedGuard implements CanActivate {
   constructor(
     private readonly userService: UserService,
-    private readonly smtpService: SmtpService,
     private readonly authService: AuthService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
 
-    if (!request.user) {
+    if (!request.user) { 
       return false
     }
     const user = await this.userService.findById(request.user.id)
@@ -27,8 +26,10 @@ export class EmailVerifiedGuard implements CanActivate {
       return false
     }
     if (!user.isVerified) {
-      const verifyToken = this.authService.generateVerifyToken(user.email)
-      await this.smtpService.sendVerificationEmail(user.email, verifyToken)
+      await this.authService.sendVerifyEmail({
+        id: user.id,
+        email: user.email,
+      })
       throw new UnauthorizedException(
         'Почта не подтверждена. Вам было отправлено письмо для подтверждения почты',
       )

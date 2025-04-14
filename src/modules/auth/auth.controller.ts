@@ -21,21 +21,15 @@ import { UserDecorator } from './decorators/user.decorator'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 import { EmailVerifiedGuard } from './guards/email-verified.guard'
 import { AccountVerified } from './decorators/account-verified.decorator'
-import { SmtpService } from 'src/core/smtp/smtp.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly smtpService: SmtpService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('registration')
   async registration(@Body() dto: RegistrationDto) {
-    const user = await this.authService.registration(dto)
-    const verifyToken = this.authService.generateVerifyToken(user.email)
-    await this.smtpService.sendVerificationEmail(user.email, verifyToken)
+    await this.authService.registration(dto)
     return 'Вы успешно зарегистрировались! На вашу почту было отправлено письмо для подтверждения почты'
   }
 
