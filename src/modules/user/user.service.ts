@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, Ip } from '@nestjs/common'
 import type { User } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma/prisma.service'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { SafeUserType } from './omit/user.omit'
 
 @Injectable()
 export class UserService {
@@ -63,6 +64,15 @@ export class UserService {
   findByToken(token: string): Promise<User | null> {
     return this.prismaService.user.findFirst({
       where: { token },
+    })
+  }
+
+  findAll(): Promise<SafeUserType[]> {
+    return this.prismaService.user.findMany({
+      omit: {
+        password: true,
+        token: true,
+      },
     })
   }
 }

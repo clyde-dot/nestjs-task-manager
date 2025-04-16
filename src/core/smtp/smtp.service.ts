@@ -18,6 +18,7 @@ export class SmtpService {
 
   async sendVerificationEmail(to: string, token: string) {
     try {
+      /*
       const sendedMessage = await this.mailerService.sendMail({
         to,
         subject: 'Подтверждение почты',
@@ -27,7 +28,8 @@ export class SmtpService {
           link: `${this.FRONT_URL}/api/auth/verify/${token}`,
         },
       })
-
+      */
+      const sendedMessage = 1
       return sendedMessage
     } catch (err) {
       console.error('Email sending error:', err.message)
