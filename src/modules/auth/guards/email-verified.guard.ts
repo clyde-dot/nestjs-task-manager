@@ -25,7 +25,7 @@ export class EmailVerifiedGuard implements CanActivate {
     if (!user) {
       return false
     }
-    if (!user.isVerified) {
+    if (!user.emailVerified) {
       await this.authService.sendVerifyEmail({
         id: user.id,
         email: user.email,

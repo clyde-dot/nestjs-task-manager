@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id         String  @id @default(uuid())
-  firstName  String  @map("first_name") @db.VarChar(30)
-  lastName   String  @map("last_name") @db.VarChar(30)
-  email      String  @unique
-  password   String
-  isVerified Boolean @default(false)
-  role       Role    @default(USER)
-  token      String?
+  id            String  @id @default(uuid())
+  firstName     String  @map("first_name") @db.VarChar(30)
+  lastName      String  @map("last_name") @db.VarChar(30)
+  email         String  @unique
+  password      String?
+  emailVerified Boolean @default(false) @map("email_verified")
+  picture       String?
+
+  provider AuthProvider
+  role     Role         @default(USER)
+  token    String?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -28,4 +31,9 @@ enum Role {
   USER
   OPERATOR
   PROGRAMMER
+}
+
+enum AuthProvider {
+  google
+  local
 }

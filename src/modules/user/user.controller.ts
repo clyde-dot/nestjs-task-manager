@@ -10,7 +10,6 @@ export class UserController {
   @Roles([Role.USER, Role.ADMIN])
   @Get('')
   async findAll(@Ip() ip: string) {
-    console.log(ip)
     const users = await this.userService.findAll()
     return users
   }

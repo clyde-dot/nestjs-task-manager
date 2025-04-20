@@ -9,11 +9,24 @@ import { JwtAuthStrategy } from './strategies/jwt-auth.strategy'
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy'
 import { LocalStrategy } from './strategies/local.strategy'
 import { SmtpModule } from 'src/core/smtp/smtp.module'
+import { GoogleStrategy } from './strategies/google.strategy'
 
 @Module({
-  imports: [PrismaModule, UserModule, PassportModule, JwtModule.register({}),SmtpModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    PassportModule,
+    JwtModule.register({}),
+    SmtpModule,
+  ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthStrategy, JwtRefreshStrategy, LocalStrategy],
+  providers: [
+    AuthService,
+    JwtAuthStrategy,
+    JwtRefreshStrategy,
+    LocalStrategy,
+    GoogleStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

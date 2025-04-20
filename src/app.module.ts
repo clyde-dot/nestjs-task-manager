@@ -19,7 +19,7 @@ import { APP_GUARD } from '@nestjs/core'
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 3,
+        limit: 100,
       },
     ]),
   ],

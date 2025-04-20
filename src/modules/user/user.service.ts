@@ -1,21 +1,17 @@
 import { BadRequestException, Injectable, Ip } from '@nestjs/common'
 import type { User } from '@prisma/client'
 import { PrismaService } from 'src/core/prisma/prisma.service'
-import { UpdateUserDto } from './dto/update-user.dto'
+import { UpdateUserDto } from './dtos/update-user.dto'
 import { SafeUserType } from './omit/user.omit'
+import { CreateUserDto } from './dtos/create-user.dto'
 
 @Injectable()
 export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  create(data: {
-    firstName: string
-    lastName: string
-    email: string
-    password: string
-  }): Promise<User> {
+  create(dto: CreateUserDto): Promise<User> {
     return this.prismaService.user.create({
-      data: data,
+      data: dto,
     })
   }
 
@@ -28,8 +24,8 @@ export class UserService {
 
   update(id: string, updateUserDto: UpdateUserDto) {
     let data = {}
-    if (updateUserDto.isVerified !== undefined) {
-      data = { ...data, isVerified: updateUserDto.isVerified }
+    if (updateUserDto.emailVerified !== undefined) {
+      data = { ...data, emailVerified: updateUserDto.emailVerified }
     }
     if (updateUserDto.token !== undefined) {
       data = { ...data, token: updateUserDto.token }

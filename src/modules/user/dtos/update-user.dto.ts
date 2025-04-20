@@ -3,6 +3,6 @@ export class UpdateUserDto {
   lastName?: string
   password?: string
   role?: string
-  isVerified?: boolean
+  emailVerified?: boolean
   token?: string
 }

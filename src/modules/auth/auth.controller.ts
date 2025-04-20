@@ -10,8 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { RegistrationDto } from './dto/registration.dto'
-import { LoginDto } from './dto/login.dto'
+import { RegistrationDto } from './dtos/registration.dto'
 import { Response } from 'express'
 import { RequestWithUser } from './auth.interface'
 import { Public } from './decorators/is-public.decorator'
@@ -21,6 +20,7 @@ import { UserDecorator } from './decorators/user.decorator'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 import { EmailVerifiedGuard } from './guards/email-verified.guard'
 import { AccountVerified } from './decorators/account-verified.decorator'
+import { GoogleGuard } from './guards/google.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -38,6 +38,31 @@ export class AuthController {
   @Post('login')
   async login(@UserDecorator() user: User, @Res() res: Response) {
     const tokens = await this.authService.generateToken(user)
+    res.cookie('refreshToken', tokens.refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+      domain: 'localhost',
+    })
+
+    return res.json({
+      accessToken: tokens.accessToken,
+      message: 'Вы успешно авторизовались !',
+    })
+  }
+
+  @UseGuards(GoogleGuard)
+  @Public()
+  @Get('google')
+  async loginWithGoogle() {}
+
+  @UseGuards(GoogleGuard)
+  @Public()
+  @Get('google/callback')
+  async googleCallback(@Req() req: RequestWithUser, @Res() res: Response) {
+    const user = req.user
+    const tokens = await this.authService.googleAuth(user)
     res.cookie('refreshToken', tokens.refreshToken, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
