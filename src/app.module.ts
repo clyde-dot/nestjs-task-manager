@@ -1,13 +1,13 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
-import { PrismaModule } from './core/prisma/prisma.module'
-import { AuthModule } from './modules/auth/auth.module'
-import { UserModule } from './modules/user/user.module'
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
-import { SmtpModule } from './core/smtp/smtp.module'
-import { RolesGuard } from './modules/auth/guards/role-bases.guard'
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
-import { APP_GUARD } from '@nestjs/core'
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from './core/prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { SmtpModule } from './core/smtp/smtp.module';
+import { RolesGuard } from './modules/auth/guards/role-bases.guard';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [

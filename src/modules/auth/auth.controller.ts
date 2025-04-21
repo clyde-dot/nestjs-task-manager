@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   Res,
@@ -14,7 +15,6 @@ import { RegistrationDto } from './dtos/registration.dto'
 import { Response } from 'express'
 import { RequestWithUser } from './auth.interface'
 import { Public } from './decorators/is-public.decorator'
-
 import type { User } from '@prisma/client'
 import { UserDecorator } from './decorators/user.decorator'
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
