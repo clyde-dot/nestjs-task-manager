@@ -62,8 +62,8 @@ export class UserService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     let data = {}
-    if (updateUserDto.emailVerified !== undefined) {
-      data = { ...data, emailVerified: updateUserDto.emailVerified }
+    if (updateUserDto.isVerified !== undefined) {
+      data = { ...data, isVerified: updateUserDto.isVerified }
     }
     if (updateUserDto.token !== undefined) {
       data = { ...data, token: updateUserDto.token }
@@ -74,15 +74,19 @@ export class UserService {
     if (updateUserDto.role !== undefined) {
       data = { ...data, role: updateUserDto.role }
     }
-    if (updateUserDto.firstName !== undefined) {
-      data = { ...data, firstName: updateUserDto.firstName }
-    }
-    if (updateUserDto.lastName !== undefined) {
-      data = { ...data, lastName: updateUserDto.lastName }
+    if (updateUserDto.displayName !== undefined) {
+      data = { ...data, lastName: updateUserDto.displayName }
     }
     if (updateUserDto.picture !== undefined) {
       data = { ...data, picture: updateUserDto.picture }
     }
+    if (updateUserDto.isTwoFactorEnabled !== undefined) {
+      data = { ...data, isTwoFactorEnabled: updateUserDto.isTwoFactorEnabled }
+    }
+    if (updateUserDto.twoFactorCode !== undefined) {
+      data = { ...data, twoFactorCode: updateUserDto.twoFactorCode }
+    }
+
     if (!data) throw new BadRequestException('нет данных для обновления')
     return await this.prismaService.user.update({
       where: { id },

@@ -1,11 +1,13 @@
-import { AuthProvider } from '@prisma/client';
+import { AuthMethod } from '@prisma/client'
 
 export class CreateUserDto {
-  email: string;
-  password?: string;
-  firstName: string;
-  lastName: string;
-  provider: AuthProvider;
-  picture: string | null;
-  emailVerified?: boolean;
+  readonly email: string
+
+  readonly password?: string
+
+  readonly displayName: string
+
+  readonly method: AuthMethod
+
+  readonly isVerified?: boolean
 }

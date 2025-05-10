@@ -1,9 +1,11 @@
-import { AuthProvider } from '@prisma/client';
+import { AuthMethod } from '@prisma/client'
 
 export class GoogleAuthDto {
-  firstName: string;
-  lastName: string;
-  picture: string | null;
-  email: string;
-  provider: AuthProvider;
+  displayName: string
+
+  picture: string | null
+
+  email: string
+
+  method: AuthMethod
 }

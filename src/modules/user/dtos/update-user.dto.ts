@@ -2,13 +2,14 @@ import { Role } from '@prisma/client'
 import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 
 export class UpdateUserDto {
-  firstName?: string
-  lastName?: string
+  displayName?: string
   password?: string
   role?: Role
-  emailVerified?: boolean
+  isVerified?: boolean
   picture?: string
   token?: string
+  twoFactorCode?: string | null
+  isTwoFactorEnabled?: boolean
 }
 
 export class UpdateUserProfileDto {
@@ -17,18 +18,14 @@ export class UpdateUserProfileDto {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
-  firstName?: string
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(3)
-  @MaxLength(30)
-  lastName?: string
+  displayName?: string
 
   @IsOptional()
   picture?: string
 
   @IsOptional()
   password?: string
+
+  @IsOptional()
+  isTwoFactorEnabled?: boolean
 }

@@ -1,16 +1,26 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { RegistrationDto } from './dtos/registration.dto'
 import { UserService } from 'src/modules/user/user.service'
 import { JwtService } from '@nestjs/jwt'
-import { User } from '@prisma/client'
+import { AuthMethod, User } from '@prisma/client'
 import { ConfigService } from '@nestjs/config'
 import { ITokens } from './auth.interface'
 import { SmtpService } from 'src/core/smtp/smtp.service'
 import { GoogleAuthDto } from './dtos/google-auth.dto'
 import { EncryptService } from 'src/core/encrypt/encrypt.service'
+import { Verify2faDto } from './dtos/verify-2fa.dto'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -43,7 +53,8 @@ export class AuthService {
     } else {
       const user = await this.userService.create({
         ...dto,
-        emailVerified: true,
+        isVerified: true,
+        method: AuthMethod.GOOGLE,
       })
       return this.generateToken(user)
     }
@@ -58,8 +69,7 @@ export class AuthService {
     const user = await this.userService.create({
       ...dto,
       password: hashedPassword,
-      provider: 'local',
-      picture: null,
+      method: AuthMethod.CREDENTIALS,
     })
     await this.sendVerifyEmail({ id: user.id, email: user.email })
     return user
@@ -72,6 +82,18 @@ export class AuthService {
   async sendVerifyEmail({ id, email }: { id: string; email: string }) {
     const verifyToken = this.generateVerifyToken(id)
     const sendedMessage = await this.smtpService.sendVerificationEmail(email, verifyToken)
+    if (!sendedMessage) {
+      throw new InternalServerErrorException('Ошибка при отправке письма')
+    }
+  }
+
+  async sendTwoFactorCode({ id, email }: { id: string; email: string }) {
+    const code = (Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000).toString()
+    const hashedCode = this.encryptService.hashData(code.toString())
+
+    const tokenCode = await this.generateTwoFactorToken(hashedCode)
+    const user = await this.userService.update(id, { twoFactorCode: tokenCode })
+    const sendedMessage = await this.smtpService.sendTwoFactorCode(email, code)
     if (!sendedMessage) {
       throw new InternalServerErrorException('Ошибка при отправке письма')
     }
@@ -90,14 +112,39 @@ export class AuthService {
       if (!user) {
         throw new BadRequestException('Пользователь не найден')
       }
-      await this.userService.update(user.id, { emailVerified: true })
+      await this.userService.update(user.id, { isVerified: true })
       return true
     } catch (error) {
+      this.logger.error(error)
       if (error.name === 'TokenExpiredError') {
         throw new BadRequestException('Срок действия токена истек')
       }
       throw new InternalServerErrorException('Ошибка при проверке токена')
     }
+  }
+
+  async verify2fa(dto: Verify2faDto): Promise<ITokens> {
+    const user = await this.userService.findByEmail(dto.email)
+    if (!user || !user.twoFactorCode) {
+      throw new UnauthorizedException()
+    }
+    const verifiedCode = this.jwtService.verify<{
+      code: string
+      exp: number
+      iat: number
+    }>(user.twoFactorCode, {
+      secret: this.configService.getOrThrow('TWO_FACTOR_SECRET'),
+      ignoreExpiration: true,
+    })
+    if (!verifiedCode) {
+      throw new BadRequestException('Срок действия кода истек')
+    }
+    const isCodeCorrect = this.encryptService.compareData(dto.code, verifiedCode.code)
+    if (!isCodeCorrect) {
+      throw new BadRequestException('Неверный код')
+    }
+    await this.userService.update(user.id, { twoFactorCode: null })
+    return await this.generateToken(user)
   }
 
   async generateToken(user: User): Promise<ITokens> {
@@ -113,6 +160,17 @@ export class AuthService {
     const hashedToken = this.encryptService.hashData(refreshToken)
     await this.userService.updateToken(user.id, hashedToken)
     return { accessToken, refreshToken }
+  }
+
+  generateTwoFactorToken(code: string): string {
+    const token = this.jwtService.sign(
+      { code },
+      {
+        secret: this.configService.getOrThrow('TWO_FACTOR_SECRET'),
+        expiresIn: this.configService.getOrThrow('TWO_FACTOR_EXPIRE'),
+      },
+    )
+    return token
   }
 
   generateVerifyToken(id: string): string {

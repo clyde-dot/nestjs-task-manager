@@ -25,7 +25,7 @@ import { EncryptModule } from './core/encrypt/encrypt.module'
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 100,
+        limit: 2,
       },
     ]),
   ],
@@ -35,6 +35,7 @@ import { EncryptModule } from './core/encrypt/encrypt.module'
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+
     {
       provide: APP_GUARD,
       useClass: RolesGuard,

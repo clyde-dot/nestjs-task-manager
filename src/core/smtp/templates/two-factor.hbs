@@ -1,7 +1,7 @@
 <html lang='ru'>
   <head>
     <meta charset='UTF-8' />
-    <title>Добро пожаловать в {{appName}}</title>
+    <title>Ваш код подтверждения — {{appName}}</title>
   </head>
   <body>
     <div
@@ -9,17 +9,18 @@
     >
       <h2 style='color: #333333;'>Здравствуйте!</h2>
       <p style='color: #555555; font-size: 16px;'>
-        Благодарим вас за регистрацию. Пожалуйста, подтвердите свой адрес электронной почты, перейдя по ссылке ниже:
+        Для подтверждения действия в
+        {{appName}}
+        используйте следующий код:
       </p>
-
-      <p style='word-break: break-all; text-align: center; margin: 30px 0;'>
-        <a href='http://{{link}}' target='_blank' style='color: #4CAF50; font-size: 16px;'>
-          Чтобы подтвердить свой адрес электронной почты, нажмите здесь
-        </a>
+      <div style='text-align: center; margin: 30px 0; font-size: 28px; font-weight: bold; color: #4CAF50;'>
+        {{code}}
+      </div>
+      <p style='color: #555555; font-size: 16px;'>
+        Этот код действителен в течение 5 минут.
       </p>
-
       <p style='color: #999999; font-size: 14px;'>
-        Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.
+        Если вы не запрашивали этот код, просто проигнорируйте это письмо.
       </p>
       <hr style='border: none; border-top: 1px solid #eeeeee; margin: 20px 0;' />
       <p style='color: #cccccc; font-size: 12px; text-align: center;'>

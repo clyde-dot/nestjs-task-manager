@@ -30,7 +30,7 @@ export class FileController {
 
   @Public()
   @Post('upload')
-  @UseInterceptors(AnyFilesInterceptor({ limits: { files: 2 } }))
+  @UseInterceptors(AnyFilesInterceptor({ limits: { files: 10 } }))
   async uploadFile(@UploadedFiles(new ParseFilePipe({ fileIsRequired: true })) files: Express.Multer.File[]) {
     await this.fileService.uploadFiles(files)
     return {
@@ -47,7 +47,7 @@ export class FileController {
   }
 
   @UseGuards(ValidateKeyGuard)
-  @Roles([Role.ADMIN, Role.OPERATOR, Role.PROGRAMMER])
+  @Roles([Role.ADMIN, Role.OPERATOR, Role.PROGRAMMER,Role.REGULAR])
   @Get('image')
   async getImage(@FileFromKey() file: File, @Res() res: Response) {
     const { stream } = await this.fileService.getImage(file)
